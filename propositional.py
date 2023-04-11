@@ -216,7 +216,7 @@ def ModusTollens(ppa_imp_b, pp_not_b):
 	"""Given ppa_imp_b which is a proof of (A -> B) and pp_not_b which is
 	a proof of (not B), generate a proof of (not A)
 	"""
-	return HypSyll(ppa_imp_b, ppb_not_b)
+	return HypSyll(ppa_imp_b, pp_not_b)
 
 def Contradiction(ppa, pp_not_a):
 	"""Given a proof of A and a proof of (not A)(which is the same as A -> _False),
