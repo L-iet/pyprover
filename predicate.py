@@ -187,7 +187,7 @@ class Predicate(metaclass=Meta):
 	When calling the function, can set the axiom keyword-only
 	argument to true.
 	"""
-	def __init__(self, name: str, *, args: list|dict = None,
+	def __init__(self, name: str, *, args: Union[list,dict] = None,
 		_completed_args: dict=None,
 		_superclass = Prop,
 		prop_kwargs = {},
@@ -246,6 +246,7 @@ class Predicate(metaclass=Meta):
 		info("C "+str(self._completed_args))
 		info("D "+str(kwargs))
 		if self.arity == 0:
+			self.prop_kwargs['children'] = [v for k,v in self.prop_kwargs.items()]
 			cls = type(str(self), (self._superclass,), self.prop_kwargs)
 			if axiom:
 				cls.__new__ = lambda _cls: object.__new__(_cls)
@@ -375,10 +376,12 @@ class Quantified(Predicate):
 				**kwargs)
 		if x is not None:
 			self._completed_args['x'] = x
+			self.prop_kwargs['x'] = x
 
 		if not(isinstance(self.predicate, Predicate)):
 			# has been completed
 			self.prop_kwargs['inner_prop'] = self.predicate
+			self.prop_kwargs['children'] = [v for k,v in self.prop_kwargs]
 			cls = type(self.__repr__(), (self._superclass,), self.prop_kwargs)
 			if axiom:
 				cls.__new__ = lambda _cls: object.__new__(_cls)
@@ -418,7 +421,8 @@ class P_Implies(Predicate):
 		self.antecedent = antecedent # Predicate
 		self.consequent = consequent
 		super().__init__(name, args=args, _superclass = Implies,
-			_completed_args=kwargs.get('_completed_args'))
+			_completed_args=kwargs.get('_completed_args'),
+			prop_kwargs = {'antecedent': self.antecedent, 'consequent': self.consequent})
 
 	def __repr__(self):
 		return f"[{self.antecedent}=>{self.consequent}]"
@@ -428,17 +432,18 @@ class P_Implies(Predicate):
 		):
 		# remove useless keys/values
 		kwargs = remove_useless_keys(kwargs, self.args)
+		ante_is_pred = isinstance(self.antecedent, Predicate)
+		cons_is_pred = isinstance(self.consequent, Predicate)
 
-		if isinstance(self.antecedent, Predicate):
+		if ante_is_pred:
 			self.antecedent = self.antecedent(axiom=False,**kwargs)
-		if isinstance(self.consequent, Predicate):
+		if cons_is_pred:
 			self.consequent = self.consequent(axiom=False, **kwargs)
 
-		if (not(isinstance(self.antecedent, Predicate))
-			and not(isinstance(self.consequent, Predicate))
-		):
+		if not (ante_is_pred or cons_is_pred):
+			self.prop_kwargs['children'] = [v for k,v in self.prop_kwargs.items()]
 			cls = type(str(self), (Implies,),
-						{'antecedent': self.antecedent, 'consequent': self.consequent}
+						self.prop_kwargs
 			)
 			if axiom:
 				cls.__new__ = lambda _cls: object.__new__(_cls)
@@ -460,6 +465,7 @@ class And_P(Predicate):
 		self.left_pred = left_pred # Predicate
 		self.right_pred = right_pred
 		super().__init__(name, args=args, _superclass = Implies,
+		prop_kwargs = {'left_prop': self.left_pred, 'right_prop': self.right_pred},
 			_completed_args=kwargs.get('_completed_args'))
 
 	def __repr__(self):
@@ -479,8 +485,9 @@ class And_P(Predicate):
 		if (not(isinstance(self.left_pred, Predicate))
 			and not(isinstance(self.right_pred, Predicate))
 		):
+			self.prop_kwargs['children'] = [v for k,v in self.prop_kwargs.items()]
 			cls = type(str(self), (Implies,),
-						{'left_prop': self.left_pred, 'right_prop': self.right_pred}
+						self.prop_kwargs
 			)
 			if axiom:
 				cls.__new__ = lambda _cls: object.__new__(_cls)
