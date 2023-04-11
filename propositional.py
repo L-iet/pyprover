@@ -176,7 +176,7 @@ def CommuteOr(ppa_or_b):
 
 def CommuteAnd(ppa_and_b):
 	"""Given a proof of (A and B), construct a proof of (B and A)."""
-	class B_and_A(Or):
+	class B_and_A(And):
 		left_prop = ppa_and_b.right_prop
 		right_prop = ppa_and_b.left_prop
 
