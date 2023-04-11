@@ -29,6 +29,8 @@ def default_new(cls):
 class Prop(metaclass=Meta):
 	obj = None
 	predicate = None # If the proposition was from a predicate, this is the predicate
+	children = [] # everything that makes up the prop ie objects and other props
+	# a basic prop will have only objects in its children
 	def __new__(cls):
 		default_new(cls)
 	def __repr__(self):
